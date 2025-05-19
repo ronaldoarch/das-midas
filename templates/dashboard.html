@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard - IA Midas</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #181818;
+      color: #FFD700;
+      min-height: 100vh;
+      display: flex;
+    }
+    .sidebar {
+      width: 220px;
+      background: #111;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 0 0 0;
+      box-shadow: 2px 0 16px #0008;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 10;
+    }
+    .sidebar h2 {
+      color: #FFD700;
+      margin-bottom: 32px;
+      font-size: 1.4em;
+      letter-spacing: 1px;
+    }
+    .sidebar a {
+      color: #FFD700;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.08em;
+      margin: 12px 0;
+      padding: 10px 32px;
+      border-radius: 8px 0 0 8px;
+      display: block;
+      width: 100%;
+      transition: background 0.2s, color 0.2s;
+    }
+    .sidebar a.active, .sidebar a:hover {
+      background: linear-gradient(90deg, #FFD70033 60%, #d4af3722 100%);
+      color: #232526;
+    }
+    .main-content {
+      margin-left: 220px;
+      width: 100%;
+      padding: 36px 5vw 36px 5vw;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #232526 0%, #181818 100%);
+    }
+    .dashboard-header {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #FFD700;
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+      text-shadow: 0 0 8px #FFD70044;
+    }
+    .dashboard-actions {
+      display: flex;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .dashboard-actions button {
+      background: linear-gradient(90deg, #FFD700 60%, #d4af37 100%);
+      color: #181818;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 32px;
+      font-size: 1.1em;
+      box-shadow: 0 2px 8px #FFD70033;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+    .dashboard-actions button:hover {
+      background: #FFD700;
+      color: #000;
+      box-shadow: 0 0 16px #FFD70088;
+    }
+    .conta-select {
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .conta-select label {
+      font-weight: 600;
+      color: #FFD700;
+    }
+    .conta-select select {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #FFD70099;
+      background: #232526;
+      color: #FFD700;
+      font-size: 1em;
+    }
+    .metrics-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .metric-card {
+      background: #232526;
+      color: #FFD700;
+      border-radius: 12px;
+      box-shadow: 0 0 16px #FFD70033;
+      padding: 22px 26px;
+      flex: 1 1 180px;
+      min-width: 160px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.15s;
+    }
+    .metric-card:hover {
+      transform: translateY(-4px) scale(1.04);
+      box-shadow: 0 0 32px #FFD70077;
+    }
+    .metric-icon {
+      font-size: 2.1em;
+      margin-bottom: 6px;
+      filter: drop-shadow(0 0 4px #FFD70088);
+    }
+    .metric-title {
+      font-size: 1.08em;
+      color: #FFD700;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .metric-value {
+      font-size: 1.6em;
+      font-weight: bold;
+      color: #232526;
+      background: #FFD700;
+      border-radius: 8px;
+      padding: 4px 16px;
+      display: inline-block;
+      margin-bottom: 2px;
+      box-shadow: 0 0 8px #FFD70044;
+    }
+    .section-title {
+      color: #FFD700;
+      font-size: 1.1em;
+      font-weight: bold;
+      margin-top: 24px;
+      margin-bottom: 8px;
+      border-bottom: 1.5px solid #FFD70055;
+      padding-bottom: 2px;
+    }
+    .dashboard-graph {
+      background: #232526;
+      border-radius: 8px;
+      padding: 18px 0 8px 0;
+      margin-bottom: 18px;
+      text-align: center;
+      box-shadow: 0 0 12px #FFD70022;
+    }
+    .dashboard-graph img {
+      max-width: 100%;
+      height: auto;
+    }
+    .dashboard-list {
+      color: #FFD700;
+      margin: 0 0 12px 0;
+      padding-left: 18px;
+    }
+    .dashboard-list li {
+      margin-bottom: 4px;
+    }
+    .health-bar-container {
+      margin: 18px 0 32px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .health-bar-bg {
+      width: 320px;
+      height: 22px;
+      background: #333;
+      border-radius: 12px;
+      box-shadow: 0 0 8px #FFD70033;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+    .health-bar-fill {
+      height: 100%;
+      width: 80%; /* valor inicial, será ajustado via JS */
+      background: linear-gradient(90deg, #00e676 0%, #ffd600 60%, #ff1744 100%);
+      border-radius: 12px 0 0 12px;
+      transition: width 0.5s, background 0.5s;
+    }
+    .health-bar-label {
+      font-weight: bold;
+      font-size: 1.1em;
+      color: #FFD700;
+      text-shadow: 0 0 6px #FFD70044;
+    }
+    @media (max-width: 900px) {
+      .main-content { padding: 18px 2vw 18px 2vw; }
+      .metrics-cards { flex-direction: column; }
+      .sidebar { width: 60px; min-width: 60px; }
+      .sidebar h2, .sidebar a span { display: none; }
+      .sidebar a { padding: 10px 0; text-align: center; }
+      .main-content { margin-left: 60px; }
+    }
+    .metrics-graph-row {
+      display: flex;
+      flex-direction: row;
+      gap: 32px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+    .health-bar-side {
+      min-width: 260px;
+      max-width: 320px;
+      margin-top: 12px;
+      background: #232526;
+      border-radius: 12px;
+      box-shadow: 0 0 16px #FFD70033;
+      padding: 18px 12px 18px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: fit-content;
+    }
+    .suggestions-row {
+      display: flex;
+      flex-direction: row;
+      gap: 32px;
+      margin-top: 18px;
+    }
+    .suggestion-box {
+      flex: 1 1 0;
+      background: #232526;
+      border-radius: 12px;
+      box-shadow: 0 0 16px #FFD70033;
+      padding: 18px 24px;
+      min-width: 220px;
+    }
+    @media (max-width: 1100px) {
+      .metrics-graph-row, .suggestions-row {
+        flex-direction: column;
+        gap: 18px;
+      }
+      .health-bar-side, .suggestion-box {
+        max-width: 100%;
+        min-width: 0;
+      }
+    }
+    .dashboard-graph.small-graph {
+      max-width: 320px;
+      min-width: 220px;
+      height: 220px;
+      margin: 0 auto;
+      padding: 8px 0 8px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #232526;
+      border-radius: 12px;
+      box-shadow: 0 0 12px #FFD70022;
+    }
+    .graph-health-row {
+      display: flex;
+      flex-direction: row;
+      gap: 32px;
+      align-items: flex-start;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+    .vertical-health {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-width: 80px;
+      max-width: 120px;
+      margin-top: 0;
+      background: #232526;
+      border-radius: 12px;
+      box-shadow: 0 0 16px #FFD70033;
+      padding: 18px 12px 18px 12px;
+      height: 220px;
+    }
+    .health-bar-container-vertical {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      height: 160px;
+      justify-content: flex-end;
+    }
+    .health-bar-bg-vertical {
+      width: 28px;
+      height: 140px;
+      background: #333;
+      border-radius: 16px;
+      box-shadow: 0 0 8px #FFD70033;
+      overflow: hidden;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: flex-end;
+    }
+    .health-bar-fill-vertical {
+      width: 100%;
+      height: 80%; /* valor inicial, será ajustado via JS */
+      background: linear-gradient(0deg, #ff1744 0%, #ffd600 60%, #00e676 100%);
+      border-radius: 0 0 16px 16px;
+      transition: height 0.5s, background 0.5s;
+      box-shadow: 0 0 8px #FFD70088;
+    }
+    .health-bar-label {
+      font-weight: bold;
+      font-size: 1.1em;
+      color: #FFD700;
+      text-shadow: 0 0 6px #FFD70044;
+      margin-top: 8px;
+    }
+    @media (max-width: 900px) {
+      .graph-health-row {
+        flex-direction: column;
+        gap: 18px;
+        align-items: stretch;
+      }
+      .dashboard-graph.small-graph, .vertical-health {
+        max-width: 100%;
+        margin: 0 auto;
+      }
+    }
+    @keyframes avatarGlow {
+      0% { box-shadow: 0 0 16px #FFD70088, 0 0 0 #FFD70000; }
+      100% { box-shadow: 0 0 32px #FFD700cc, 0 0 24px #FFD70044; }
+    }
+    @keyframes avatarHeadMove {
+      0% { transform: rotate(-4deg) scale(1.01); }
+      50% { transform: rotate(4deg) scale(1.04); }
+      100% { transform: rotate(-4deg) scale(1.01); }
+    }
+    @keyframes eyeBlink {
+      0%, 92%, 100% { ry: 2; }
+      95%, 98% { ry: 0.3; }
+    }
+    #midasSvg .midas-eye {
+      animation: eyeBlink 4s infinite;
+      transform-origin: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>IA Midas</h2>
+    <a href="{{ url_for('dashboard', conta_id=dados.conta_id if dados and dados.conta_id else '3369787843155297') }}" class="active">🏠 <span>Dashboard</span></a>
+    <a href="{{ url_for('config') }}">⚙️ <span>Configurações Meta</span></a>
+  </div>
+  <div class="main-content">
+    <div class="dashboard-header">Dashboard - Relatório de Desempenho</div>
+    <form class="conta-select" method="get" action="">
+      <label for="conta_id">Selecionar Conta:</label>
+      <select name="conta_id" id="conta_id" onchange="this.form.submit()">
+        <option value="">Selecione...</option>
+        <option value="3369787843155297" {% if dados and dados.conta_id == '3369787843155297' %}selected{% endif %}>Conta 1</option>
+        <option value="1234567890123456" {% if dados and dados.conta_id == '1234567890123456' %}selected{% endif %}>Conta 2</option>
+        <!-- Adicione mais contas dinamicamente -->
+      </select>
+    </form>
+    <div style="text-align:center; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 16px;">
+      <label for="select-planilha" style="color: yellow; font-weight: bold;">Selecionar Planilha:</label>
+      <select id="select-planilha"></select>
+      <button id="btn-exportar" style="background: #FFD700; color: #232526; border: none; border-radius: 8px; padding: 8px 18px; font-weight: bold; cursor: pointer;">Exportar Relatório</button>
+    </div>
+    <div class="metrics-cards">
+      <div class="metric-card">
+        <div class="metric-icon">📈</div>
+        <div class="metric-title">Leads</div>
+        <div class="metric-value">221</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">👥</div>
+        <div class="metric-title">Alcance</div>
+        <div class="metric-value">2.523</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">👁️</div>
+        <div class="metric-title">Impressões</div>
+        <div class="metric-value">4.187</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">💰</div>
+        <div class="metric-title">Custo/Lead</div>
+        <div class="metric-value">R$ 2,03</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">💸</div>
+        <div class="metric-title">Total Gasto</div>
+        <div class="metric-value">R$ 503,19</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">🔁</div>
+        <div class="metric-title">Frequência</div>
+        <div class="metric-value">1,6</div>
+      </div>
+    </div>
+    <div class="graph-health-row">
+      <div class="dashboard-graph small-graph" style="max-width: 700px; min-width: 400px; height: 220px; display: flex; align-items: center; justify-content: center;">
+        <canvas id="chartPerformance" width="600" height="220"></canvas>
+      </div>
+      <div class="voice-agent-box" style="min-width: 220px; max-width: 320px; height: 220px; background: #232526; border-radius: 12px; box-shadow: 0 0 16px #FFD70033; padding: 18px 16px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; margin-left: 16px;">
+        <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:8px;">
+          <div id="midas-avatar" style="width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,#FFD700 60%,#d4af37 100%); display:flex; align-items:center; justify-content:center; box-shadow:0 0 16px #FFD70088; margin-bottom:6px; position:relative; animation:avatarHeadMove 2.5s infinite alternate;">
+            <svg id="midasSvg" width="60" height="60" viewBox="0 0 60 60">
+              <ellipse cx="30" cy="32" rx="22" ry="26" fill="#232526" stroke="#FFD700" stroke-width="2"/>
+              <ellipse cx="22" cy="30" rx="3.5" ry="6" fill="#FFD700"/>
+              <ellipse cx="38" cy="30" rx="3.5" ry="6" fill="#FFD700"/>
+              <ellipse class="midas-eye" cx="22" cy="32" rx="1.2" ry="2" fill="#232526"/>
+              <ellipse class="midas-eye" cx="38" cy="32" rx="1.2" ry="2" fill="#232526"/>
+              <ellipse cx="30" cy="44" rx="7" ry="3" fill="#FFD70088"/>
+              <ellipse cx="30" cy="44" rx="3.5" ry="1.2" fill="#FFD700"/>
+            </svg>
+          </div>
+          <span style="font-weight:bold; color:#FFD700; font-size:1.1em;">Midas</span>
+        </div>
+        <button id="voiceBtn" style="background:#FFD700; color:#232526; border:none; border-radius:50%; width:48px; height:48px; font-size:2em; display:flex; align-items:center; justify-content:center; box-shadow:0 0 8px #FFD70044; cursor:pointer; margin-bottom:10px;">
+          <span id="micIcon">🎤</span>
+        </button>
+        <div id="voiceStatus" style="color:#FFD700; font-size:0.95em; margin-bottom:6px;">Clique no microfone e fale</div>
+        <div id="voiceTranscript" style="background:#181818; color:#FFD700; border-radius:8px; padding:8px 10px; min-height:32px; width:100%; font-size:1em; margin-bottom:8px;"></div>
+        <div id="voiceResponse" style="background:#FFD70022; color:#FFD700; border-radius:8px; padding:8px 10px; min-height:32px; width:100%; font-size:1em;"></div>
+      </div>
+      <div class="health-bar-side vertical-health">
+        <div class="section-title">Saúde da Campanha</div>
+        <div class="health-bar-container-vertical">
+          <div class="health-bar-bg-vertical">
+            <div class="health-bar-fill-vertical" id="healthBar"></div>
+          </div>
+          <div class="health-bar-label" id="healthLabel">Saudável</div>
+        </div>
+      </div>
+    </div>
+    <div class="suggestions-row">
+      <div class="suggestion-box">
+        <div class="section-title">Análise e Sugestões</div>
+        <ul class="dashboard-list">
+          <li><b>Pontos positivos:</b></li>
+          <li>- Excelente custo por lead (R$ 2,03).</li>
+          <li>- Boa taxa de conversão.</li>
+          <li>- Orçamento diário bem distribuído.</li>
+        </ul>
+      </div>
+      <div class="suggestion-box">
+        <div class="section-title">Oportunidades de Melhoria</div>
+        <ul class="dashboard-list">
+          <li>- A frequência está se aproximando de 2, o que pode causar saturação.</li>
+          <li>- Alcance pode ser ampliado com testes de novos públicos (ex: lookalike ou remarketing).</li>
+          <li>- Teste novos criativos (vídeos, textos, imagens diferentes).</li>
+          <li>- Avalie diferentes objetivos de campanha (leads ou conversões).</li>
+          <li>- Otimize horários e dispositivos com melhor performance.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Termômetro de saúde da campanha (exemplo baseado no custo/lead)
+    function atualizarSaudeCampanha(custoLead) {
+      let percent = 0;
+      let label = '';
+      let cor = '';
+      if (custoLead <= 3) {
+        percent = 90;
+        label = 'Ótimo';
+        cor = '#00e676'; // verde
+      } else if (custoLead <= 5) {
+        percent = 60;
+        label = 'Bom';
+        cor = '#ffd600'; // amarelo
+      } else {
+        percent = 30;
+        label = 'Ruim';
+        cor = '#ff1744'; // vermelho
+      }
+      document.getElementById('healthBar').style.width = percent + '%';
+      document.getElementById('healthBar').style.background = cor;
+      document.getElementById('healthLabel').innerText = label;
+    }
+    // Chamar ao carregar e ao atualizar métricas
+    window.addEventListener('DOMContentLoaded', function() {
+      atualizarSaudeCampanha(2.03); // valor inicial
+    });
+    // Gráfico Chart.js
+    const ctx = document.getElementById('chartPerformance').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Leads', 'Alcance', 'Impressões', 'Custo por Lead', 'Total Gasto'],
+        datasets: [{
+          label: 'Resumo',
+          data: [221, 2523, 4187, 2.03, 503.19],
+          backgroundColor: '#FFD700',
+          borderRadius: 8,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        plugins: {
+          legend: {
+            display: true,
+            labels: { color: '#FFD700', font: { weight: 'bold' } }
+          },
+        },
+        scales: {
+          x: {
+            ticks: { color: '#FFD700', font: { weight: 'bold' } },
+            grid: { color: '#FFD70022' }
+          },
+          y: {
+            ticks: { color: '#FFD700', font: { weight: 'bold' } },
+            grid: { color: '#FFD70022' }
+          }
+        },
+        responsive: false,
+        maintainAspectRatio: false,
+      }
+    });
+    // AGENTE DE VOZ
+    const voiceBtn = document.getElementById('voiceBtn');
+    const micIcon = document.getElementById('micIcon');
+    const voiceStatus = document.getElementById('voiceStatus');
+    const voiceTranscript = document.getElementById('voiceTranscript');
+    const voiceResponse = document.getElementById('voiceResponse');
+    let recognition;
+    let listening = false;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = 'pt-BR';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onstart = function() {
+        listening = true;
+        micIcon.textContent = '🔴';
+        voiceStatus.textContent = 'Ouvindo...';
+        voiceTranscript.textContent = '';
+      };
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        voiceTranscript.textContent = transcript;
+        // Resposta personalizada estilo Jarvis/Midas
+        if (transcript.toLowerCase().includes('midas')) {
+          voiceResponse.textContent = 'Olá, eu sou o Midas, seu assistente inteligente. Como posso ajudar você hoje?';
+        } else if (transcript.toLowerCase().includes('relatório')) {
+          voiceResponse.textContent = 'Você pediu o relatório. Clique em Exportar Relatórios acima.';
+        } else if (transcript.toLowerCase().includes('saúde')) {
+          voiceResponse.textContent = 'A saúde da campanha está saudável!';
+        } else {
+          voiceResponse.textContent = 'Desculpe, não entendi. Tente chamar "Midas" ou perguntar sobre relatório ou saúde.';
+        }
+      };
+      recognition.onerror = function(event) {
+        voiceStatus.textContent = 'Erro: ' + event.error;
+        listening = false;
+        micIcon.textContent = '🎤';
+      };
+      recognition.onend = function() {
+        listening = false;
+        micIcon.textContent = '🎤';
+        voiceStatus.textContent = 'Clique no microfone e fale';
+      };
+      voiceBtn.onclick = function() {
+        if (!listening) {
+          recognition.start();
+        } else {
+          recognition.stop();
+        }
+      };
+    } else {
+      voiceBtn.disabled = true;
+      voiceStatus.textContent = 'Reconhecimento de voz não suportado neste navegador.';
+    }
+    // Função para formatar números no formato brasileiro
+    function formatarNumeroBR(valor, decimais = 0) {
+      if (valor === '-' || valor === undefined || valor === null || isNaN(valor)) return '-';
+      let n = Number(valor);
+      if (decimais === 0) {
+        return n.toLocaleString('pt-BR', {maximumFractionDigits: 0});
+      } else {
+        return n.toLocaleString('pt-BR', {minimumFractionDigits: decimais, maximumFractionDigits: decimais});
+      }
+    }
+    function gerarSugestoes(metricas) {
+      let sugestoes = [];
+      let positivos = [];
+      // Custo por Lead
+      if (metricas['Custo por Lead'] <= 3) {
+        positivos.push('Excelente custo por lead.');
+      } else if (metricas['Custo por Lead'] > 5) {
+        sugestoes.push('O custo por lead está elevado, tente otimizar seus anúncios.');
+      } else {
+        sugestoes.push('O custo por lead está dentro da média, mas pode ser melhorado.');
+      }
+      // Alcance
+      if (metricas['Alcance'] > 50000) {
+        positivos.push('Ótimo alcance, sua campanha está atingindo muitas pessoas.');
+      } else if (metricas['Alcance'] < 10000) {
+        sugestoes.push('O alcance está baixo, tente ampliar o público.');
+      }
+      // Conversão
+      if (metricas['Conversão'] < 10) {
+        sugestoes.push('A conversão está baixa, avalie o criativo e o público.');
+      } else if (metricas['Conversão'] > 100) {
+        positivos.push('Ótima taxa de conversão.');
+      }
+      // ROI
+      if (metricas['ROI'] !== '-' && metricas['ROI'] < 0) {
+        sugestoes.push('Atenção: o ROI está negativo, reveja o investimento.');
+      } else if (metricas['ROI'] !== '-' && metricas['ROI'] > 0.2) {
+        positivos.push('Ótimo retorno sobre investimento (ROI).');
+      }
+      // Total Gasto
+      if (metricas['Total Gasto'] > 10000) {
+        sugestoes.push('O investimento está alto, monitore o retorno.');
+      }
+      return {positivos, sugestoes};
+    }
+    function atualizarSugestoes(metricas) {
+      const analiseBox = document.querySelectorAll('.suggestion-box')[0];
+      let html = '<div class="section-title">Análise e Sugestões</div><ul class="dashboard-list">';
+      const {positivos, sugestoes} = gerarSugestoes(metricas);
+      if (positivos.length > 0) {
+        html += '<li><b>Pontos positivos:</b></li>';
+        positivos.forEach(p => html += `<li>- ${p}</li>`);
+      }
+      if (sugestoes.length > 0) {
+        html += '<li><b>Oportunidades:</b></li>';
+        sugestoes.forEach(s => html += `<li>- ${s}</li>`);
+      }
+      html += '</ul>';
+      analiseBox.innerHTML = html;
+    }
+    // Chamar ao atualizar métricas
+    function atualizarMetricas(sheetId) {
+      fetch(`/api/sheets-metrics?sheet_id=${sheetId}`)
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.error) {
+            alert('Erro ao buscar métricas: ' + data.error);
+            return;
+          }
+          const metricas = [
+            {campo: 'Leads', seletor: 0, dec: 0},
+            {campo: 'Alcance', seletor: 1, dec: 0},
+            {campo: 'Impressões', seletor: 2, dec: 0},
+            {campo: 'Custo por Lead', seletor: 3, dec: 2},
+            {campo: 'Total Gasto', seletor: 4, dec: 2},
+            {campo: 'Frequência', seletor: 5, dec: 2},
+          ];
+          metricas.forEach(m => {
+            const valor = data[m.campo] !== undefined ? data[m.campo] : '-';
+            document.querySelectorAll('.metric-card .metric-value')[m.seletor].innerText = formatarNumeroBR(valor, m.dec);
+          });
+          // Atualizar gráfico
+          if (window.chart) {
+            chart.data.datasets[0].data = [
+              data['Leads'] || 0,
+              data['Alcance'] || 0,
+              data['Impressões'] || 0,
+              data['Custo por Lead'] || 0,
+              data['Total Gasto'] || 0
+            ];
+            chart.update();
+          }
+          // Atualizar termômetro
+          atualizarSaudeCampanha(Number(data['Custo por Lead']) || 0);
+          // Atualizar sugestões
+          atualizarSugestoes(data);
+        });
+    }
+    // Ao carregar a página, buscar a lista de planilhas e preencher o dropdown
+    window.addEventListener('DOMContentLoaded', function() {
+      fetch('/api/list-sheets')
+        .then(resp => resp.json())
+        .then(planilhas => {
+          const select = document.getElementById('select-planilha');
+          select.innerHTML = '';
+          planilhas.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.nome;
+            select.appendChild(opt);
+          });
+          // Atualiza as métricas da primeira planilha automaticamente
+          if (planilhas.length > 0) {
+            atualizarMetricas(planilhas[0].id);
+          }
+        });
+      // Evento de mudança
+      document.getElementById('select-planilha').addEventListener('change', function(e) {
+        atualizarMetricas(e.target.value);
+      });
+    });
+    document.getElementById('btn-exportar').onclick = function() {
+      const planilhaId = document.getElementById('select-planilha').value;
+      window.open(`/api/export-sheet?sheet_id=${planilhaId}`, '_blank');
+    };
+  </script>
+</body>
+</html>

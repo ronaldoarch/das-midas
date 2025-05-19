@@ -1,0 +1,97 @@
+body {
+  background-color: #111;
+  color: #FFD700;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+}
+
+h1, h2, h3 {
+  color: #FFD700;
+  text-shadow: 0 0 8px #FFD70044;
+  margin-bottom: 24px;
+}
+
+input, button {
+  background-color: #222;
+  border: 1px solid #FFD700;
+  color: #FFD700;
+  padding: 10px;
+  margin: 5px;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, button:focus {
+  outline: none;
+  box-shadow: 0 0 8px #FFD70088;
+}
+
+button:hover, input[type="submit"]:hover {
+  background-color: #FFD700;
+  color: #111;
+  box-shadow: 0 0 12px #FFD70088;
+  cursor: pointer;
+}
+
+.metrics-table {
+  margin: 30px auto 0 auto;
+  border-collapse: collapse;
+  color: #FFD700;
+  background-color: #181818;
+  min-width: 320px;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 0 16px #FFD70022;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.metrics-table th, .metrics-table td {
+  border: 1px solid #FFD700;
+  padding: 12px 8px;
+  text-align: left;
+}
+.metrics-table th {
+  background-color: #222;
+  font-weight: bold;
+}
+.metrics-table tr:nth-child(even) {
+  background-color: #191919;
+}
+
+label {
+  display: block;
+  margin-top: 18px;
+  margin-bottom: 6px;
+  font-weight: 500;
+  text-align: left;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#resultGoal, #detailedMetrics {
+  margin-top: 20px;
+  white-space: pre-wrap;
+  text-align: left;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 700px) {
+  body {
+    padding: 8px;
+  }
+  .metrics-table, #resultGoal, #detailedMetrics {
+    max-width: 98vw;
+    font-size: 0.95rem;
+  }
+  input, button {
+    width: 98vw;
+    max-width: 98vw;
+    box-sizing: border-box;
+  }
+} 
