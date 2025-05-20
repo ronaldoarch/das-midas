@@ -13,6 +13,7 @@ from gspread_dataframe import get_as_dataframe
 from google.oauth2.service_account import Credentials
 import csv
 import locale
+import json
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -182,10 +183,7 @@ def list_sheets():
 @app.route('/api/sheets-metrics')
 def sheets_metrics():
     sheet_id = request.args.get('sheet_id', '1w7VPPYppc-RcK_aEAIZO4103KWGM7H2FWj4V_onUIE4')
-    creds = Credentials.from_service_account_file('credentials.json', scopes=[
-        'https://www.googleapis.com/auth/spreadsheets',
-        'https://www.googleapis.com/auth/drive'
-    ])
+    creds = get_google_creds()
     gc = gspread.authorize(creds)
     spreadsheet = gc.open_by_key(sheet_id)
     worksheet = spreadsheet.sheet1
@@ -220,10 +218,7 @@ def sheets_metrics():
 def export_sheet():
     locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
     sheet_id = request.args.get('sheet_id')
-    creds = Credentials.from_service_account_file('credentials.json', scopes=[
-        'https://www.googleapis.com/auth/spreadsheets',
-        'https://www.googleapis.com/auth/drive'
-    ])
+    creds = get_google_creds()
     gc = gspread.authorize(creds)
     spreadsheet = gc.open_by_key(sheet_id)
     worksheet = spreadsheet.sheet1
@@ -329,48 +324,19 @@ def export_sheet():
 
 # ------------------- INIT DB ------------------- #
 with app.app_context():
-    if not os.path.exists(os.path.join(basedir, 'instance')):
-        os.makedirs(os.path.join(basedir, 'instance'))
+    os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)
     db.create_all()
 
 # Caminho para o arquivo de credenciais
-creds = Credentials.from_service_account_file('credentials.json', scopes=[
-    'https://www.googleapis.com/auth/spreadsheets',
-    'https://www.googleapis.com/auth/drive'
-])
+def get_google_creds():
+    creds_json = os.environ.get("GOOGLE_CREDENTIALS")
+    creds_dict = json.loads(creds_json)
+    return Credentials.from_service_account_info(creds_dict, scopes=[
+        'https://www.googleapis.com/auth/spreadsheets',
+        'https://www.googleapis.com/auth/drive'
+    ])
 
-gc = gspread.authorize(creds)
-
-# Lista de IDs das planilhas
-planilhas = [
-    '1w7VPPYppc-RcK_aEAIZO4103KWGM7H2FWj4V_onUIE4',
-    '10tUstU0pmQ5efF5B6hQStsj5MNHlwVuFzFRwFnis9LA'
-]
-
-for planilha_id in planilhas:
-    spreadsheet = gc.open_by_key(planilha_id)
-    print(f"\nPlanilha: {spreadsheet.title}")
-    for worksheet in spreadsheet.worksheets():
-        print(f"  Aba: {worksheet.title}")
-        df = get_as_dataframe(worksheet, evaluate_formulas=True, header=0)
-        df = df.dropna(how='all')
-        colunas_necessarias = ['CTR', 'CPC', 'Valor Gasto', 'Conversão', 'Receita']
-        if all(col in df.columns for col in colunas_necessarias):
-            ctr = df['CTR'].sum()
-            cpc = df['CPC'].mean()
-            valor_gasto = df['Valor Gasto'].sum()
-            conversao = df['Conversão'].sum()
-            receita = df['Receita'].sum()
-            roi = ((receita - valor_gasto) / valor_gasto) * 100 if valor_gasto != 0 else 0
-            print(f"    CTR total: {ctr}")
-            print(f"    CPC médio: {cpc}")
-            print(f"    Valor Gasto: {valor_gasto}")
-            print(f"    Conversão total: {conversao}")
-            print(f"    Receita total: {receita}")
-            print(f"    ROI: {roi:.2f}%")
-        else:
-            print(f"    Colunas esperadas não encontradas nesta aba. Colunas disponíveis: {list(df.columns)}")
-        print('-' * 80)
+gc = gspread.authorize(get_google_creds())
 
 if __name__ == '__main__':
     app.run(debug=True)
